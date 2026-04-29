@@ -6,6 +6,7 @@ import { StorageManager } from './modules/storage.js';
 import { Gamification } from './modules/gamification.js';
 import { VoiceChecker } from './modules/voiceCheck.js';
 import { AdminModule } from './modules/admin.js';
+import { showSection, actualizarReloj, mostrarMensaje } from './modules/ui.js';
 
 class App {
     constructor() {
@@ -36,9 +37,8 @@ class App {
         this.verificarServidor();
 
         // Reloj
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-        }, 1000);
+        setInterval(actualizarReloj, 1000);
+        actualizarReloj();
 
         // Actualizar puntos en UI
         Gamification.actualizarPuntosUI(this.storage.getPuntos());
@@ -79,8 +79,7 @@ class App {
     }
 
     showSection(id) {
-        document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
+        showSection(id);
         if (id === 'adminPanel') {
             this.cargarRegistrosAdmin();
             this.cargarFiltrosAdmin();
@@ -92,22 +91,25 @@ class App {
     // ---------- Registro de empleados ----------
     async capturarFotoRegistro() {
         const video = this.camera.getVideo('videoRegistro');
-        if (!video) return alert('Cámara no lista');
+        if (!video) return mostrarMensaje('msgRegistro', 'Cámara no lista', true);
         const descriptor = await this.faceRecognizer.obtenerDescriptor(video);
         if (!descriptor) {
-            alert('No se detectó rostro');
+            mostrarMensaje('msgRegistro', 'No se detectó rostro', true);
             return;
         }
         this.tempDescriptor = descriptor;
         const canvas = await this.camera.capturarFrame(video);
         this.tempFoto = canvas.toDataURL();
-        alert('Rostro capturado');
+        mostrarMensaje('msgRegistro', '✅ Rostro capturado');
     }
 
     registrarEmpleado() {
         const nombre = document.getElementById('nombreEmpleado').value.trim();
         const horario = document.getElementById('horarioEmpleado').value;
-        if (!nombre || !this.tempDescriptor) return alert('Nombre y foto requeridos');
+        if (!nombre || !this.tempDescriptor) {
+            alert('Nombre y foto requeridos');
+            return;
+        }
         const numero = 'EMP' + Date.now();
         this.storage.addEmpleado({
             numero, nombre, horario,
@@ -118,6 +120,7 @@ class App {
         alert('Empleado registrado');
         this.showSection('menuPrincipal');
         this.tempDescriptor = null;
+        document.getElementById('nombreEmpleado').value = '';
     }
 
     // ---------- Asistencia ----------
@@ -184,7 +187,7 @@ class App {
                 alert('No hay empleados registrados');
                 return;
             }
-            const empleado = this.storage.getEmpleados()[0]; // simplificado
+            const empleado = this.storage.getEmpleados()[0]; // simplificado: se debería reconocer por voz quién es
             const hoy = new Date().toISOString().split('T')[0];
             const hora = new Date().toLocaleTimeString('es-MX', { hour12: false });
             const tipo = confirm('¿Registrar ENTRADA? (Aceptar = Entrada, Cancelar = Salida)') ? 'entrada' : 'salida';
@@ -211,6 +214,7 @@ class App {
                 }
             }
             alert(`Registro por voz: ${tipo} - ${emocion}`);
+            this.mostrarRecomendacionPersonal();
         });
     }
 
@@ -309,7 +313,7 @@ class App {
                     });
                     this.cargarRegistrosAdmin();
                     this.actualizarGraficoRadial();
-                } else alert('No se detectaron rostros');
+                } else alert('No se detectaron rostros en la imagen');
             };
             reader.readAsDataURL(file);
         };
@@ -319,7 +323,7 @@ class App {
     mostrarRecomendacionPersonal() {
         const empleados = this.storage.getEmpleados();
         if (!empleados.length) return;
-        const emp = empleados[0];
+        const emp = empleados[0]; // Usamos el primer empleado como ejemplo
         const misRegistros = this.storage.getRegistros().filter(r => r.numero === emp.numero);
         const diasCansancio = {};
         misRegistros.forEach(r => {
@@ -336,7 +340,8 @@ class App {
             recomendacion = 'Los lunes cuestan. ¡Ánimo! Tómate un café extra.';
         else
             recomendacion = '¡Sigue así! Recuerda hidratarte.';
-        document.getElementById('recomendacionPersonal').innerHTML = `💡 Recomendación: ${recomendacion}`;
+        const div = document.getElementById('recomendacionPersonal');
+        if (div) div.innerHTML = `💡 Recomendación: ${recomendacion}`;
     }
 }
 
