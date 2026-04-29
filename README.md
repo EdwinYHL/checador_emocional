@@ -1,0 +1,2 @@
+# checador_emocional
+sdfsdf
