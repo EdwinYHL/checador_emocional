@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SAIK - Checador Emocional</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Librerías externas -->
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body id="appBody">
+<header id="mainHeader">
+    <h1>SAIK - Checador con Inteligencia Emocional</h1>
+    <div class="clock" id="clock"></div>
+    <div>⭐ Tus puntos: <span id="puntosPositividad" class="puntos">0</span></div>
+</header>
+
+<div class="container" id="menuPrincipal">
+    <h2>Menú Principal</h2>
+    <button class="btn" onclick="app.showSection('registroEmpleado')">📝 Dar de Alta</button>
+    <button class="btn" onclick="app.showSection('checador')">📸 Checador (cámara)</button>
+    <button class="btn" onclick="app.iniciarChequeoVoz()">🎤 Checar por Voz</button>
+    <button class="btn" onclick="app.showSection('loginAdmin')">🔐 Administrador</button>
+    <div class="small">🤖 Face-API: <span id="modelStatus">Cargando...</span></div>
+    <div class="small">🧠 YOLO: <span id="yoloStatus">Verificando...</span></div>
+    <div id="recomendacionPersonal" class="recomendacion"></div>
+</div>
+
+<!-- Registro -->
+<div class="container hidden" id="registroEmpleado">
+    <h2>Registro de Empleado</h2>
+    <input type="text" id="nombreEmpleado" placeholder="Nombre completo">
+    <select id="horarioEmpleado">
+        <option value="08:00-16:00">08:00-16:00</option>
+        <option value="09:00-17:00">09:00-17:00</option>
+        <option value="10:00-18:00">10:00-18:00</option>
+    </select>
+    <video id="videoRegistro" autoplay muted playsinline></video>
+    <button class="btn" onclick="app.capturarFotoRegistro()">Capturar Foto</button>
+    <button class="btn" onclick="app.registrarEmpleado()">Registrar</button>
+    <button class="btn" onclick="app.showSection('menuPrincipal')">Volver</button>
+</div>
+
+<!-- Checador cámara -->
+<div class="container hidden" id="checador">
+    <h2>Checador Inteligente</h2>
+    <video id="videoChecador" autoplay muted playsinline></video>
+    <button class="btn" onclick="app.tomarAsistencia('entrada')">📥 Entrada</button>
+    <button class="btn" onclick="app.tomarAsistencia('salida')">📤 Salida</button>
+    <button class="btn" onclick="app.showSection('menuPrincipal')">Volver</button>
+    <div id="emocionBox">🤖 Esperando detección...</div>
+    <div id="resultado"></div>
+    <div id="msgAntiEstres"></div>
+</div>
+
+<!-- Admin -->
+<div class="container hidden" id="loginAdmin">
+    <h2>Login Admin</h2>
+    <input type="text" id="usuarioAdmin" placeholder="admin">
+    <input type="password" id="passAdmin" placeholder="contraseña">
+    <button class="btn" onclick="app.loginAdmin()">Entrar</button>
+    <button class="btn" onclick="app.showSection('menuPrincipal')">Volver</button>
+</div>
+
+<div class="container hidden" id="adminPanel">
+    <h2>Panel de Administración</h2>
+    <div id="alertaEnfados" class="alerta">⚠️ ALERTA: 3 o más personas molestas en la misma hora.</div>
+    <div class="dashboard-grid">
+        <div class="card" id="totalEmp">Empleados<br>0</div>
+        <div class="card" id="totalAsis">Asistencias<br>0</div>
+        <div class="card" id="totalRet">Retardos<br>0</div>
+        <div class="card" id="totalFal">Faltas<br>0</div>
+    </div>
+    <div class="filtros">
+        <input type="month" id="filtroMes" onchange="app.cargarRegistrosAdmin()">
+        <select id="filtroEmpleado" onchange="app.cargarRegistrosAdmin()"><option value="">Todos</option></select>
+        <button class="btn" onclick="app.enviarResumenSlack()">📨 Enviar a Slack</button>
+        <button class="btn" onclick="app.capturarSelfieGrupal()">👥 Selfie Grupal</button>
+    </div>
+    <canvas id="graficoRadial" width="400" height="400" style="max-width:100%; margin:10px auto; display:block;"></canvas>
+    <div style="overflow-x:auto;">
+        <table id="tablaRegistros"><thead><tr><th>Empleado</th><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Emoción</th><th>Acción</th></tr></thead><tbody></tbody></table>
+    </div>
+    <button class="btn" onclick="app.exportarExcel()">📎 Exportar Excel</button>
+    <button class="btn" onclick="app.verResumenEmociones()">📊 Resumen Emocional</button>
+    <button class="btn" onclick="app.showSection('menuPrincipal')">Cerrar</button>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
